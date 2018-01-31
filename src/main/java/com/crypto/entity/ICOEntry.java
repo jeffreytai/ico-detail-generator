@@ -293,7 +293,7 @@ public class ICOEntry {
                     columnIndexMap.entrySet()
                             .stream()
                             .filter(c -> StringUtils.areStringsEqualIgnoreCase(
-                                    StringUtils.sanitizeAlphabeticalStringValue(c.getKey()), fieldName))
+                                    StringUtils.sanitizeAlphanumericStringValue(c.getKey()), fieldName))
                             .collect(Collectors.toList());
 
             if (matchedFields.size() != 1) {

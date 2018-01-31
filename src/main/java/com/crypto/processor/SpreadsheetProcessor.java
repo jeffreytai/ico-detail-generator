@@ -7,12 +7,12 @@ import com.crypto.reader.ICODropReader;
 import com.crypto.reader.SpreadsheetReader;
 import com.crypto.writer.SpreadsheetWriter;
 import com.google.api.services.sheets.v4.Sheets;
+
+import com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 public class SpreadsheetProcessor {
@@ -32,7 +32,7 @@ public class SpreadsheetProcessor {
      * Retrieve data from ICO Drops page
      * Store data in personal Google Sheets
      */
-    public void process(String icoName) {
+    public void process(String icoName, String url) {
         try {
             // Connect to Google Sheets API
             Sheets service = GoogleSheetsAuthentication.getSheetsService(Authentication.OAUTH);
@@ -57,6 +57,9 @@ public class SpreadsheetProcessor {
                 else {
                     entry.assignDefaultEmptyFields(existingEntry);
                 }
+            }
+            else if (!Strings.isNullOrEmpty(url)) {
+                entry = icoDropReader.extractDetails(url);
             }
             else {
                 entry = icoDropReader.inferDetails(icoName);

@@ -137,7 +137,7 @@ public class SpreadsheetWriter {
             List<Field> matchedFields =
                     Arrays.stream(icoEntryFields)
                             .filter(f ->
-                                    StringUtils.areStringsEqualIgnoreCase(f.getName(), StringUtils.sanitizeAlphabeticalStringValue(columnName)))
+                                    StringUtils.areStringsEqualIgnoreCase(f.getName(), StringUtils.sanitizeAlphanumericStringValue(columnName)))
                             .collect(Collectors.toList());
 
             if (matchedFields.size() != 1) {

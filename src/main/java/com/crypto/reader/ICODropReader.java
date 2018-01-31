@@ -83,7 +83,7 @@ public class ICODropReader {
         Document doc = null;
 
         // If it doesn't, try to find the name
-        sanitizedIcoName = StringUtils.sanitizeAlphabeticalStringValue(icoName);
+        sanitizedIcoName = StringUtils.sanitizeAlphanumericStringValue(icoName);
         requestUrl = this.BASE_URL + sanitizedIcoName + "/";
 
         // Try the base ico name itself
