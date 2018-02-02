@@ -1,7 +1,7 @@
 package com.crypto.writer;
 
 import com.crypto.GoogleSheetsConstants;
-import com.crypto.entity.ICOEntry;
+import com.crypto.entity.Entry;
 import com.crypto.util.StringUtils;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.Sheet;
@@ -52,18 +52,18 @@ public class SpreadsheetWriter {
     /**
      * ICO entries that already exist on the spreadsheet
      */
-    private Map<String, ICOEntry> existingEntries;
+    private Map<String, Entry> existingEntries;
 
     /**
      * Constructor
      */
-    public SpreadsheetWriter(Sheets googleSheetsService, Map<String, Integer> columnIndexMap, Map<String, ICOEntry> existingEntries) {
+    public SpreadsheetWriter(Sheets googleSheetsService, Map<String, Integer> columnIndexMap, Map<String, Entry> existingEntries) {
         this.googleSheetsService = googleSheetsService;
         this.columnIndexMap = columnIndexMap;
         this.existingEntries = existingEntries;
     }
 
-    public void processResults(ICOEntry entry) {
+    public void processResults(Entry entry) {
         // Get sheet id
         String sheetId = getSheetId();
 
@@ -106,11 +106,11 @@ public class SpreadsheetWriter {
      * @param entry
      * @return
      */
-    private Integer findAvailableRow(ICOEntry entry) {
+    private Integer findAvailableRow(Entry entry) {
         String tokenName = entry.getToken();
 
         int index=1;
-        for (Map.Entry<String, ICOEntry> kv : this.existingEntries.entrySet()) {
+        for (Map.Entry<String, Entry> kv : this.existingEntries.entrySet()) {
             if (kv.getKey().equals(tokenName)) {
                 return index + 1;
             }
@@ -125,7 +125,7 @@ public class SpreadsheetWriter {
      * @param sheetTitle
      * @param entry
      */
-    private void postResults(String sheetTitle, ICOEntry entry, Integer rowIndex) {
+    private void postResults(String sheetTitle, Entry entry, Integer rowIndex) {
         String range = sheetTitle + "!A" + rowIndex;
         List<List<Object>> sheetData = new ArrayList<>();
 
@@ -137,7 +137,7 @@ public class SpreadsheetWriter {
             List<Field> matchedFields =
                     Arrays.stream(icoEntryFields)
                             .filter(f ->
-                                    StringUtils.areStringsEqualIgnoreCase(f.getName(), StringUtils.sanitizeAlphabeticalStringValue(columnName)))
+                                    StringUtils.areStringsEqualIgnoreCase(f.getName(), StringUtils.sanitizeAlphanumericStringValue(columnName)))
                             .collect(Collectors.toList());
 
             if (matchedFields.size() != 1) {

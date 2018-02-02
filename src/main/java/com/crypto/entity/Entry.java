@@ -1,5 +1,6 @@
 package com.crypto.entity;
 
+import com.crypto.enums.SourceType;
 import com.crypto.util.StringUtils;
 import com.google.common.base.Strings;
 import org.jsoup.nodes.Document;
@@ -15,9 +16,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class ICOEntry {
+public class Entry {
 
-    private static final Logger logger = LoggerFactory.getLogger(ICOEntry.class);
+    private static final Logger logger = LoggerFactory.getLogger(Entry.class);
 
     /**************
      * Fields
@@ -162,14 +163,20 @@ public class ICOEntry {
      */
     private String kycApproved;
 
+    /**
+     * If ICO has been purchased
+     */
+    private String purchased;
+
 
     /***************
      * Constructors
      **************/
-    public ICOEntry(String token, String ticker, String type, String totalTokens, String fundraisingGoal, String availableForTokenSale, String icoTokenPrice,
+    public Entry(String token, String ticker, String type, String totalTokens, String fundraisingGoal, String availableForTokenSale, String icoTokenPrice,
                     String projectSummary, String team, String advisors, String bonusForTheFirst, String presaleInformation, String icoStartDate,
                     String tokenIssue, String tokenType, String soldOnPresale, String whitelist, String minMaxPersonalCap, String hypeRate, String riskRate,
-                    String roiRate, String overallScore, String url, String registrationStatus, String registeredAs, String whitelistApproved, String kycApproved) {
+                    String roiRate, String overallScore, String url, String registrationStatus, String registeredAs, String whitelistApproved, String kycApproved,
+                    String purchased) {
         this.token = token;
         this.ticker = ticker;
         this.type = type;
@@ -197,49 +204,93 @@ public class ICOEntry {
         this.registeredAs = registeredAs;
         this.whitelistApproved = whitelistApproved;
         this.kycApproved = kycApproved;
+        this.purchased = purchased;
     }
 
     /**
      * Creates an ICOEntry entity with a JSoup HTML document retrieved from the ICODrops page
      * @param document
      */
-    public ICOEntry(Document document) {
+    public Entry(SourceType sourceType, Document document) {
         String url = document.location();
 
-        String coinName = document.select(".ico-desk .ico-main-info h3").text();
-        String hypeRate = document.select(".rating-field .rating-items .rating-item:nth-child(1) p.rate").text();
-        String riskRate = document.select(".rating-field .rating-items .rating-item:nth-child(2) p.rate").text();
-        String roiRate = document.select(".rating-field .rating-items .rating-item:nth-child(3) p.rate").text();
-        String overallScore = document.select(".rating-result .rating-box p.ico-rate").text();
-        String description = document.select(".ico-description").text();
-        String icoStartDate = document.select(".sale-date").text();
+        String coinName = StringUtils.EMPTY_STRING,
+                hypeRate = StringUtils.EMPTY_STRING,
+                riskRate = StringUtils.EMPTY_STRING,
+                roiRate = StringUtils.EMPTY_STRING,
+                overallScore = StringUtils.EMPTY_STRING,
+                description = StringUtils.EMPTY_STRING,
+                icoStartDate = StringUtils.EMPTY_STRING,
+                ticker = StringUtils.EMPTY_STRING,
+                tokenType = StringUtils.EMPTY_STRING,
+                icoTokenPrice = StringUtils.EMPTY_STRING,
+                fundraisingGoal = StringUtils.EMPTY_STRING,
+                soldOnPresale = StringUtils.EMPTY_STRING,
+                totalTokens = StringUtils.EMPTY_STRING,
+                availableForTokenSale = StringUtils.EMPTY_STRING,
+                whitelist = StringUtils.EMPTY_STRING,
+                bonusForTheFirst = StringUtils.EMPTY_STRING,
+                minMaxPersonalCap = StringUtils.EMPTY_STRING,
+                tokenIssue = StringUtils.EMPTY_STRING;
 
-        // Create a map for each row value
-        Map<String, String> tokenSaleInformation = new LinkedHashMap<>();
-        Elements tokenSaleDetails = document.select(".white-desk.ico-desk .row.list li");
-        for (Element detail : tokenSaleDetails) {
-            String detailText = detail.text();
-            String delimiter = ": ";
+        if (sourceType == SourceType.ICODrop) {
+            coinName = document.select(".ico-desk .ico-main-info h3").text();
+            hypeRate = document.select(".rating-field .rating-items .rating-item:nth-child(1) p.rate").text();
+            riskRate = document.select(".rating-field .rating-items .rating-item:nth-child(2) p.rate").text();
+            roiRate = document.select(".rating-field .rating-items .rating-item:nth-child(3) p.rate").text();
+            overallScore = document.select(".rating-result .rating-box p.ico-rate").text();
+            description = document.select(".ico-description").text();
+            icoStartDate = document.select(".sale-date").text();
 
-            if (detailText.contains(delimiter)) {
-                String key = detailText.substring(0, detailText.indexOf(delimiter));
-                String value = detailText.substring(detailText.indexOf(delimiter) + delimiter.length(), detailText.length());
+            // Create a map for each row value
+            Map<String, String> tokenSaleInformation = new LinkedHashMap<>();
+            Elements tokenSaleDetails = document.select(".white-desk.ico-desk .row.list li");
+            for (Element detail : tokenSaleDetails) {
+                String detailText = detail.text();
+                String delimiter = ": ";
 
-                tokenSaleInformation.put(key, value);
+                if (detailText.contains(delimiter)) {
+                    String key = detailText.substring(0, detailText.indexOf(delimiter));
+                    String value = detailText.substring(detailText.indexOf(delimiter) + delimiter.length(), detailText.length());
+
+                    tokenSaleInformation.put(key, value);
+                }
             }
+
+            ticker = StringUtils.extractValueFromMap("Ticker", tokenSaleInformation);
+            tokenType = StringUtils.extractValueFromMap("Token type", tokenSaleInformation);
+            icoTokenPrice = StringUtils.extractValueFromMap("ICO Token Price", tokenSaleInformation);
+            fundraisingGoal = StringUtils.extractValueFromMap("Fundraising Goal", tokenSaleInformation);
+            soldOnPresale = StringUtils.extractValueFromMap("Sold on pre-sale", tokenSaleInformation);
+            totalTokens = StringUtils.extractValueFromMap("Total Tokens", tokenSaleInformation);
+            availableForTokenSale = StringUtils.extractValueFromMap("Available for Token Sale", tokenSaleInformation);
+            whitelist = StringUtils.extractValueFromMap("Whitelist", tokenSaleInformation);
+            bonusForTheFirst = StringUtils.extractValueFromMap("Bonus for the First", tokenSaleInformation);
+            minMaxPersonalCap = StringUtils.extractValueFromMap("Min/Max Personal Cap", tokenSaleInformation);
+            tokenIssue = StringUtils.extractValueFromMap("Token Issue", tokenSaleInformation);
+        }
+        else if (sourceType == SourceType.ICOBench) {
+            coinName = document.select(".name h1").text();
+            hypeRate = StringUtils.EMPTY_STRING;
+            riskRate = StringUtils.EMPTY_STRING;
+            roiRate = StringUtils.EMPTY_STRING;
+            overallScore = document.select(".fixed_data .rate").text() + "/5";
+            description = document.select(".ico_information p").text();
+            icoStartDate = document.select(".financial_data .col_2 small").text();
+
+            ticker = document.select(".financial_data div:eq(2) b").text();
+            tokenType = document.select("#financial .box_left > div:contains(Type) .value").text();
+            icoTokenPrice = document.select("#financial .box_left > div:contains(Price in ICO) .value").text();
+            fundraisingGoal = StringUtils.EMPTY_STRING;
+            soldOnPresale = StringUtils.EMPTY_STRING;
+            totalTokens = StringUtils.EMPTY_STRING;
+            availableForTokenSale = StringUtils.EMPTY_STRING;
+            whitelist = StringUtils.EMPTY_STRING;
+            bonusForTheFirst = StringUtils.EMPTY_STRING;
+            minMaxPersonalCap = StringUtils.EMPTY_STRING;
+            tokenIssue = StringUtils.EMPTY_STRING;
         }
 
-        String ticker = StringUtils.extractValueFromMap("Ticker", tokenSaleInformation);
-        String tokenType = StringUtils.extractValueFromMap("Token type", tokenSaleInformation);
-        String icoTokenPrice = StringUtils.extractValueFromMap("ICO Token Price", tokenSaleInformation);
-        String fundraisingGoal = StringUtils.extractValueFromMap("Fundraising Goal", tokenSaleInformation);
-        String soldOnPresale = StringUtils.extractValueFromMap("Sold on pre-sale", tokenSaleInformation);
-        String totalTokens = StringUtils.extractValueFromMap("Total Tokens", tokenSaleInformation);
-        String availableForTokenSale = StringUtils.extractValueFromMap("Available for Token Sale", tokenSaleInformation);
-        String whitelist = StringUtils.extractValueFromMap("Whitelist", tokenSaleInformation);
-        String bonusForTheFirst = StringUtils.extractValueFromMap("Bonus for the First", tokenSaleInformation);
-        String minMaxPersonalCap = StringUtils.extractValueFromMap("Min/Max Personal Cap", tokenSaleInformation);
-        String tokenIssue = StringUtils.extractValueFromMap("Token Issue", tokenSaleInformation);
 
         this.token = coinName;
         this.ticker = ticker;
@@ -268,6 +319,7 @@ public class ICOEntry {
         this.registeredAs = StringUtils.EMPTY_STRING;
         this.whitelistApproved = StringUtils.EMPTY_STRING;
         this.kycApproved = StringUtils.EMPTY_STRING;
+        this.purchased = StringUtils.EMPTY_STRING;
     }
 
     /**
@@ -277,7 +329,7 @@ public class ICOEntry {
      * @param rowEntry
      * @param columnIndexMap
      */
-    public ICOEntry(List<Object> rowEntry, Map<String, Integer> columnIndexMap) {
+    public Entry(List<Object> rowEntry, Map<String, Integer> columnIndexMap) {
         Integer nameIndex = columnIndexMap.get("Token").intValue();
         logger.info("{} - creating entity", rowEntry.get(nameIndex).toString());
 
@@ -293,7 +345,7 @@ public class ICOEntry {
                     columnIndexMap.entrySet()
                             .stream()
                             .filter(c -> StringUtils.areStringsEqualIgnoreCase(
-                                    StringUtils.sanitizeAlphabeticalStringValue(c.getKey()), fieldName))
+                                    StringUtils.sanitizeAlphanumericStringValue(c.getKey()), fieldName))
                             .collect(Collectors.toList());
 
             if (matchedFields.size() != 1) {
@@ -556,11 +608,19 @@ public class ICOEntry {
         this.kycApproved = kycApproved;
     }
 
+    public String getPurchased() {
+        return purchased;
+    }
+
+    public void setPurchased(String purchased) {
+        this.purchased = purchased;
+    }
+
     /**
      * Assign the values that are user-populated, used when we're overwriting details on the spreadsheet
      * @param source
      */
-    public void assignDefaultEmptyFields(ICOEntry source) {
+    public void assignDefaultEmptyFields(Entry source) {
         this.type = source.getType();
         this.team = source.getTeam();
         this.advisors = source.getAdvisors();
@@ -569,6 +629,58 @@ public class ICOEntry {
         this.registeredAs = source.getRegisteredAs();
         this.whitelistApproved = source.getWhitelistApproved();
         this.kycApproved = source.getKycApproved();
+        this.purchased = source.getPurchased();
+    }
+
+
+    /**
+     * Merge the entity with an existing source.
+     * If the current entity already has a value in the field, prefer to use that.
+     * If the current entity doesn't have a value but the source does, use the source's value.
+     * @param source
+     */
+    public void mergeEntry(Entry source) {
+        this.token = !Strings.isNullOrEmpty(source.getToken()) && Strings.isNullOrEmpty(this.token)
+                ? source.getToken() : this.token;
+        this.ticker = !Strings.isNullOrEmpty(source.getTicker()) && Strings.isNullOrEmpty(this.ticker)
+                ? source.getTicker() : this.ticker;
+        this.totalTokens = !Strings.isNullOrEmpty(source.getTotalTokens()) && Strings.isNullOrEmpty(this.totalTokens)
+                ? source.getTotalTokens() : this.totalTokens;
+        this.fundraisingGoal = !Strings.isNullOrEmpty(source.getFundraisingGoal()) && Strings.isNullOrEmpty(this.fundraisingGoal)
+                ? source.getFundraisingGoal() : this.fundraisingGoal;
+        this.availableForTokenSale = !Strings.isNullOrEmpty(source.getAvailableForTokenSale()) && Strings.isNullOrEmpty(this.availableForTokenSale)
+                ? source.getAvailableForTokenSale() : this.availableForTokenSale;
+        this.icoTokenPrice = !Strings.isNullOrEmpty(source.getIcoTokenPrice()) && Strings.isNullOrEmpty(this.icoTokenPrice)
+                ? source.getIcoTokenPrice() : this.icoTokenPrice;
+        this.projectSummary = !Strings.isNullOrEmpty(source.getProjectSummary()) && Strings.isNullOrEmpty(this.projectSummary)
+                ? source.getProjectSummary() : this.projectSummary;
+        this.bonusForTheFirst = !Strings.isNullOrEmpty(source.getBonusForTheFirst()) && Strings.isNullOrEmpty(this.bonusForTheFirst)
+                ? source.getBonusForTheFirst() : this.bonusForTheFirst;
+        this.icoStartDate = !Strings.isNullOrEmpty(source.getIcoStartDate()) && Strings.isNullOrEmpty(this.icoStartDate)
+                ? source.getIcoStartDate() : this.icoStartDate;
+        this.tokenIssue = !Strings.isNullOrEmpty(source.getTokenIssue()) && Strings.isNullOrEmpty(this.tokenIssue)
+                ? source.getTokenIssue() : this.tokenIssue;
+        this.tokenType = !Strings.isNullOrEmpty(source.getTokenType()) && Strings.isNullOrEmpty(this.tokenType)
+                ? source.getTokenType() : this.tokenType;
+        this.soldOnPresale = !Strings.isNullOrEmpty(source.getSoldOnPresale()) && Strings.isNullOrEmpty(this.soldOnPresale)
+                ? source.getSoldOnPresale() : this.soldOnPresale;
+        this.whitelist = !Strings.isNullOrEmpty(source.getWhitelist()) && Strings.isNullOrEmpty(this.whitelist)
+                ? source.getWhitelist() : this.whitelist;
+        this.minMaxPersonalCap = !Strings.isNullOrEmpty(source.getMinMaxPersonalCap()) && Strings.isNullOrEmpty(this.minMaxPersonalCap)
+                ? source.getMinMaxPersonalCap() : this.minMaxPersonalCap;
+        this.hypeRate = !Strings.isNullOrEmpty(source.getHypeRate()) && Strings.isNullOrEmpty(this.hypeRate)
+                ? source.getHypeRate() : this.hypeRate;
+        this.riskRate = !Strings.isNullOrEmpty(source.getRiskRate()) && Strings.isNullOrEmpty(this.riskRate)
+                ? source.getRiskRate() : this.riskRate;
+        this.roiRate = !Strings.isNullOrEmpty(source.getRoiRate()) && Strings.isNullOrEmpty(this.roiRate)
+                ? source.getRoiRate() : this.roiRate;
+        this.overallScore = !Strings.isNullOrEmpty(source.getOverallScore()) && Strings.isNullOrEmpty(this.overallScore)
+                ? source.getOverallScore() : this.overallScore;
+        this.url = !Strings.isNullOrEmpty(source.getUrl()) && Strings.isNullOrEmpty(this.url)
+                ? source.getUrl() : this.url;
+
+
+        assignDefaultEmptyFields(source);
     }
 
     @Override
@@ -600,7 +712,8 @@ public class ICOEntry {
                 .append("Registration status: ").append(this.registrationStatus).append("\n")
                 .append("Registered as: ").append(this.registeredAs).append("\n")
                 .append("Whitelist approved: ").append(this.whitelistApproved).append("\n")
-                .append("KYC approved: ").append(this.kycApproved).append("\n");
+                .append("KYC approved: ").append(this.kycApproved).append("\n")
+                .append("Purchased: ").append(this.purchased).append("\n");
 
         return sb.toString();
     }
@@ -612,7 +725,7 @@ public class ICOEntry {
      */
     @Override
     public boolean equals(Object obj) {
-        ICOEntry comp = (ICOEntry) obj;
+        Entry comp = (Entry) obj;
 
         return this.token.equals(comp.getToken()) &&
                 this.ticker.equals(comp.getTicker()) &&

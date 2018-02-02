@@ -15,21 +15,8 @@ public class StringUtils {
      * @param value
      * @return
      */
-    public static String sanitizeAlphabeticalStringValue(String value) {
-        return value.replaceAll("[^a-zA-Z]", "");
-    }
-
-    /**
-     * Remove the string "(Code Name)" from a coin's name and any suffixed non-alphabetical characters
-     * For example, "CANADA (Code Name) **" should become "CANADA"
-     * @param value
-     * @return
-     */
-    public static String sanitizeIcoCodeName(String value) {
-        String valueWithoutCodeName = value.replaceAll("\\(Code Name\\)", "");
-
-        int lastAlphabeticalCharIndex = valueWithoutCodeName.replaceAll("[^a-zA-Z]*$", "").length();
-        return valueWithoutCodeName.substring(0, lastAlphabeticalCharIndex);
+    public static String sanitizeAlphanumericStringValue(String value) {
+        return value.replaceAll("[^0-9a-zA-Z]", "");
     }
 
     /**
@@ -50,5 +37,15 @@ public class StringUtils {
      */
     public static boolean areStringsEqualIgnoreCase(String value1, String value2) {
         return value1.toLowerCase().equals(value2.toLowerCase());
+    }
+
+    /**
+     * Check if a string is in the format of a url
+     * @param value
+     * @return
+     */
+    public static boolean isUrlFormat(String value) {
+        String http = "http";
+        return value.toLowerCase().indexOf(http) == 0;
     }
 }

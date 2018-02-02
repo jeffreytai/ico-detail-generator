@@ -1,7 +1,7 @@
 package com.crypto.reader;
 
 import com.crypto.GoogleSheetsConstants;
-import com.crypto.entity.ICOEntry;
+import com.crypto.entity.Entry;
 import com.crypto.util.StringUtils;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.BatchGetValuesResponse;
@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -44,8 +43,8 @@ public class SpreadsheetReader {
     /**
      * Extract data from the ICO spreadsheet
      */
-    public Map<String, ICOEntry> extractEntries() {
-        Map<String, ICOEntry> entries = new LinkedHashMap<>();
+    public Map<String, Entry> extractEntries() {
+        Map<String, Entry> entries = new LinkedHashMap<>();
 
         try {
             // Shorthand notation for retrieving all cells on a sheet
@@ -89,7 +88,7 @@ public class SpreadsheetReader {
                         headerRow = false;
                         logger.info("Created map of column name to index");
                     } else {
-                        ICOEntry detailedIco = new ICOEntry(entry, this.columnIndexMap);
+                        Entry detailedIco = new Entry(entry, this.columnIndexMap);
                         entries.put(detailedIco.getToken(), detailedIco);
                     }
 
